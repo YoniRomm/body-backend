@@ -5,6 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -130,6 +132,12 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Register route handler
 	http.HandleFunc("/generate", patternHandler)
+
+	// Reverse proxy to Lua backend
+	luaURL, _ := url.Parse("http://127.0.0.1:8081")
+	proxy := httputil.NewSingleHostReverseProxy(luaURL)
+
+	http.Handle("/detokenize", proxy)
 
 	// Start server
 	port := ":8080"
