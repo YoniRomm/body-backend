@@ -54,13 +54,14 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate space needed for 3 occurrences of the card number
-	cardNumberLength := len(tokenizedCardNumber)
-	totalCardNumberBytes := cardNumberLength * 3
+	// Create the XML pattern with the tokenized card number
+	xmlPattern := fmt.Sprintf(`<AccountActivity accountNumber="%s">`, tokenizedCardNumber)
+	xmlPatternLength := len(xmlPattern)
+	totalPatternBytes := xmlPatternLength * patternCount
 
-	// Ensure we have enough space for the card numbers
-	if payloadSize < totalCardNumberBytes {
-		http.Error(w, "Payload size too small to fit 3 occurrences of the tokenized card number", http.StatusBadRequest)
+	// Ensure we have enough space for the XML patterns
+	if payloadSize < totalPatternBytes {
+		http.Error(w, "Payload size too small to fit 3 occurrences of the XML pattern", http.StatusBadRequest)
 		return
 	}
 
@@ -70,7 +71,7 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a byte slice from the random content
 	payload := []byte(randomContent)
 
-	// Generate 3 random positions to insert the card number
+	// Generate 3 random positions to insert the XML pattern
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	positions := make([]int, 3)
 
@@ -81,12 +82,12 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 		attempts := 0
 
 		for !validPosition && attempts < 100 {
-			position = rng.Intn(payloadSize - cardNumberLength + 1)
+			position = rng.Intn(payloadSize - xmlPatternLength + 1)
 			validPosition = true
 
 			// Check if this position overlaps with existing positions
 			for j := 0; j < i; j++ {
-				if abs(position-positions[j]) < cardNumberLength {
+				if abs(position-positions[j]) < xmlPatternLength {
 					validPosition = false
 					break
 				}
@@ -96,22 +97,22 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 
 		if !validPosition {
 			// Fallback: distribute evenly
-			position = (payloadSize/(patternCount+1))*(i+1) - cardNumberLength/2
+			position = (payloadSize/(patternCount+1))*(i+1) - xmlPatternLength/2
 			if position < 0 {
 				position = 0
 			}
-			if position > payloadSize-cardNumberLength {
-				position = payloadSize - cardNumberLength
+			if position > payloadSize-xmlPatternLength {
+				position = payloadSize - xmlPatternLength
 			}
 		}
 
 		positions[i] = position
 	}
 
-	// Insert the card number at the calculated positions
-	cardNumberBytes := []byte(tokenizedCardNumber)
+	// Insert the XML pattern at the calculated positions
+	xmlPatternBytes := []byte(xmlPattern)
 	for _, position := range positions {
-		copy(payload[position:position+cardNumberLength], cardNumberBytes)
+		copy(payload[position:position+xmlPatternLength], xmlPatternBytes)
 	}
 
 	// Set content type and response headers
@@ -136,7 +137,7 @@ func main() {
 	fmt.Println("Send POST/GET requests to http://localhost:8080/generate with headers:")
 	fmt.Println("  X-Pattern-Bytes: <payload_size_in_bytes>")
 	fmt.Println("  X-Pattern-Count: <number_for_compatibility>")
-	fmt.Println("  X-Tokenized-Card-Number: <card_number_appears_3_times_randomly>")
+	fmt.Println("  X-Tokenized-Card-Number: <card_number_in_XML_pattern>")
 	fmt.Println("  X-Request-Id: <optional_request_id_echoed_back>")
 
 	log.Fatal(http.ListenAndServe(port, nil))
