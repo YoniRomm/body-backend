@@ -5,8 +5,8 @@ FROM openresty/openresty:1.25.3.1-0-alpine
 WORKDIR /usr/local/openresty/nginx/html
 
 # Copy Lua handler and NGINX config
-COPY handler.lua /usr/local/openresty/nginx/html/handler.lua
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY lua-backend/handler.lua /usr/local/openresty/nginx/html/handler.lua
+COPY lua-backend/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 
 # Expose port
 EXPOSE 8080
