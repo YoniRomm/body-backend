@@ -1,19 +1,15 @@
-FROM openresty/openresty:1.25.3.1-0-alpine AS base
+# Base image: OpenResty (NGINX + Lua)
+FROM openresty/openresty:1.25.3.1-0-alpine
 
-# Install Go
-RUN apk add --no-cache go
+# Set working directory
+WORKDIR /usr/local/openresty/nginx/html
 
-WORKDIR /app
+# Copy Lua handler and NGINX config
+COPY handler.lua /usr/local/openresty/nginx/html/handler.lua
+COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 
-# Copy source
-COPY . .
+# Expose port
+EXPOSE 8080
 
-# Build Go app
-RUN go build -o go-server main.go
-
-# Copy config files
-COPY lua-backend/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY lua-backend/handler.lua /usr/local/openresty/nginx/html/handler.lua
-
-# Start both servers
-CMD ["/bin/sh", "-c", "/usr/local/bin/openresty -g 'daemon off;' & /app/go-server"]
+# Start OpenResty (NGINX + Lua)
+CMD ["openresty", "-g", "daemon off;"]
