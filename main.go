@@ -32,6 +32,7 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 	patternBytesStr := r.Header.Get("X-Pattern-Bytes")
 	patternCountStr := r.Header.Get("X-Pattern-Count")
 	tokenizedCardNumber := r.Header.Get("X-Tokenized-Card-Number")
+	requestId := r.Header.Get("X-Request-Id")
 
 	// Validate required headers
 	if patternBytesStr == "" || patternCountStr == "" || tokenizedCardNumber == "" {
@@ -113,8 +114,11 @@ func patternHandler(w http.ResponseWriter, r *http.Request) {
 		copy(payload[position:position+cardNumberLength], cardNumberBytes)
 	}
 
-	// Set content type and write response
+	// Set content type and response headers
 	w.Header().Set("Content-Type", "text/plain")
+	if requestId != "" {
+		w.Header().Set("X-Request-Id", requestId)
+	}
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(payload)
 	if err != nil {
@@ -133,6 +137,7 @@ func main() {
 	fmt.Println("  X-Pattern-Bytes: <payload_size_in_bytes>")
 	fmt.Println("  X-Pattern-Count: <number_for_compatibility>")
 	fmt.Println("  X-Tokenized-Card-Number: <card_number_appears_3_times_randomly>")
+	fmt.Println("  X-Request-Id: <optional_request_id_echoed_back>")
 
 	log.Fatal(http.ListenAndServe(port, nil))
 }
