@@ -7,6 +7,7 @@ local tokenized_card_number = headers["X-Tokenized-Card-Number"]
 local pattern_count = tonumber(headers["X-Pattern-Count"]) or 0
 local payload_size  = tonumber(headers["X-Pattern-Bytes"]) or 0
 local debug_header  = tostring(headers["X-Pattern-Debug"])
+local x_request_id_header = tostring(headers["X-Request-Id"])
 
 
 -- Validate headers
@@ -76,6 +77,7 @@ ngx.header["X-Patterns-Num"] = inserted
 ngx.header["X-Pattern-Type"] = pattern_type
 ngx.header["X-Card-Number"] = card_number
 ngx.header["X-Debug-Mode"] = debug_header
+ngx.header["request-id"] = x_request_id_header
 
 if debug_header == "true" then
     ngx.log(ngx.ERR, "DEBUG: Inserted " .. inserted .. " patterns")
